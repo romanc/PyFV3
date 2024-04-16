@@ -10,7 +10,7 @@ from pyFV3 import DynamicalCoreConfig
 
 
 TESTED_CONFIGS: List[str] = [
-    "/examples/configs/c12_baroclinic.yaml",
+    "/pyFV3/examples/configs/c12_baroclinic.yaml",
 ]
 
 
@@ -39,7 +39,7 @@ def test_config_from_yaml(tested_configs: List[str]):
             minutes=runtime["minutes"],
             seconds=runtime["seconds"],
         )
-        timestep = timedelta(seconds=config.dt_atmos)
+        timestep = timedelta(seconds=config["dt_atmos"])
         n_steps = floor(total_time.total_seconds() / timestep.total_seconds())
         dycore_config = DynamicalCoreConfig.from_yaml(config_file)
         assert dycore_config.n_steps == n_steps

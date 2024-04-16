@@ -391,7 +391,7 @@ class DynamicalCoreConfig:
         with open(yaml_config, "r") as f:
             raw_config = yaml.safe_load(f)
         flat_config: dict = {}
-        timestep = timedelta(seconds=raw_config.dt_atmos)
+        timestep = timedelta(seconds=raw_config["dt_atmos"])
         runtime = {
             "days": 0.0,
             "hours": 0.0,
