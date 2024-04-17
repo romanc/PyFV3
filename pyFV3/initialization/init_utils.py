@@ -6,7 +6,7 @@ import numpy as np
 
 import ndsl.constants as constants
 from ndsl.dsl.typing import Float
-from ndsl.grid.eta import SURFACE_PRESSURE, _compute_eta, _vertical_coordinate
+from ndsl.grid.eta import SURFACE_PRESSURE, compute_eta, vertical_coordinate
 from ndsl.grid.gnomonic import (
     get_lonlat_vect,
     get_unit_vector_direction,
@@ -320,7 +320,7 @@ def setup_pressure_fields(
     pe[:] = initialize_edge_pressure(delp, ptop)
     peln[:] = initialize_log_pressure_interfaces(pe, ptop)
     pk[:], pkz[:] = initialize_kappa_pressures(pe, peln, ptop)
-    eta[:-1], eta_v[:-1] = _compute_eta(ak, bk)
+    eta[:-1], eta_v[:-1] = compute_eta(ak, bk)
 
 
 def specific_humidity(delp, peln, lat_agrid):
@@ -350,7 +350,7 @@ def surface_geopotential_perturbation(lat):
        only necessary to initialize surface geopotential.'
     * 'balances the non-zero zonal wind at the surface with surface elevation zs'
     """
-    surface_level = _vertical_coordinate(ETA_SURFACE)
+    surface_level = vertical_coordinate(ETA_SURFACE)
     return geopotential_perturbation(lat, surface_level)
 
 
