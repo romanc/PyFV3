@@ -316,6 +316,18 @@ class YPiecewiseParabolic:
                 "Y Piecewise Parabolic (xppm): "
                 f" grid type {grid_type} not implemented. <3 or 4 available."
             )
+
+        if abs(jord) >= 8 and jord != 8:
+            raise NotImplementedError(
+                "Y Piecewise Parabolic (yppm): "
+                f"jord {jord} != 8 not implemented when >= 8."
+            )
+
+        if jord < 0:
+            raise NotImplementedError(
+                f"Y Piecewise Parabolic (yppm): jord {jord} < 0 not implemented."
+            )
+
         self._dya = dya
         ax_offsets = stencil_factory.grid_indexing.axis_offsets(origin, domain)
         self._compute_flux_stencil = stencil_factory.from_origin_domain(

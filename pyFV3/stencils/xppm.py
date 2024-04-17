@@ -315,6 +315,18 @@ class XPiecewiseParabolic:
                 "X Piecewise Parabolic (xppm): "
                 f" grid type {grid_type} not implemented. <3 or 4 available."
             )
+
+        if abs(iord) >= 8 and iord != 8:
+            raise NotImplementedError(
+                "X Piecewise Parabolic (xppm): "
+                f"iord {iord} != 8 not implemented when >= 8."
+            )
+
+        if iord < 0:
+            raise NotImplementedError(
+                f"X Piecewise Parabolic (xppm): iord {iord} < 0 not implemented."
+            )
+
         self._dxa = dxa
         ax_offsets = stencil_factory.grid_indexing.axis_offsets(origin, domain)
         self._compute_flux_stencil = stencil_factory.from_origin_domain(
