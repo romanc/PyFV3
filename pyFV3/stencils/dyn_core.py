@@ -51,7 +51,7 @@ from pyFV3.stencils.riem_solver3 import NonhydrostaticVerticalSolver
 from pyFV3.stencils.riem_solver_c import NonhydrostaticVerticalSolverCGrid
 
 
-HUGE_R = 1.0e40
+HUGE_R = Float(1.0e40)
 
 
 def zero_data(
