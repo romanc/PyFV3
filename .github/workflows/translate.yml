@@ -100,7 +100,7 @@ jobs:
               --which_modules=D_SW \
               --threshold_overrides_file=./tests/savepoint/translate/overrides/standard.yaml \
               ./tests/savepoint
-        - name: Orchestrated dace:cpu Remapping 
+        - name: Orchestrated dace:cpu Remapping
           run: |
             export FV3_DACEMODE=BuildAndRun
             pytest \
