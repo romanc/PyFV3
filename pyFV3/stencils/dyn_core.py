@@ -1,5 +1,6 @@
 from typing import Dict, Mapping, Optional
 
+import numpy as np
 from dace.frontend.python.interface import nounroll as dace_nounroll
 from gt4py.cartesian.gtscript import (
     __INLINED,
@@ -51,7 +52,10 @@ from pyFV3.stencils.riem_solver3 import NonhydrostaticVerticalSolver
 from pyFV3.stencils.riem_solver_c import NonhydrostaticVerticalSolverCGrid
 
 
-HUGE_R = 1.0e40
+if Float == np.float32:
+    HUGE_R = Float(1.0e8)
+else:
+    HUGE_R = Float(1.0e40)
 
 
 def zero_data(
