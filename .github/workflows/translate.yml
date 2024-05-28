@@ -87,6 +87,8 @@ jobs:
         - name: Orchestrated dace:cpu FvTp2d
           run: |
             rm -rf .gt_cache_FV3_A
+            export FV3_DACEMODE=BuildAndRun
+            export PACE_LOGLEVEL=Debug
             pytest \
               -v -s --data_path=./test_data/8.1.3/c12_6ranks_standard/dycore \
               --backend=dace:cpu \
@@ -96,6 +98,8 @@ jobs:
         - name: Orchestrated dace:cpu D_SW
           run: |
             rm -rf .gt_cache_FV3_A
+            export FV3_DACEMODE=BuildAndRun
+            export PACE_LOGLEVEL=Debug
             pytest \
               -v -s --data_path=./test_data/8.1.3/c12_6ranks_standard/dycore \
               --backend=dace:cpu \
@@ -105,6 +109,8 @@ jobs:
         - name: Orchestrated dace:cpu Remapping
           run: |
             rm -rf .gt_cache_FV3_A
+            export FV3_DACEMODE=BuildAndRun
+            export PACE_LOGLEVEL=Debug
             pytest \
               -v -s --data_path=./test_data/8.1.3/c12_6ranks_standard/dycore \
               --backend=dace:cpu \
