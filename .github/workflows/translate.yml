@@ -88,6 +88,9 @@ jobs:
           run: |
             rm -rf .gt_cache_FV3_A
             export FV3_DACEMODE=BuildAndRun
+            export PACE_FLOAT_PRECISION=64
+            export PACE_TEST_N_THRESHOLD_SAMPLES=0
+            export OMP_NUM_THREADS=10
             export PACE_LOGLEVEL=Debug
             pytest \
               -v -s --data_path=./test_data/8.1.3/c12_6ranks_standard/dycore \
@@ -99,6 +102,9 @@ jobs:
           run: |
             rm -rf .gt_cache_FV3_A
             export FV3_DACEMODE=BuildAndRun
+            export PACE_FLOAT_PRECISION=64
+            export PACE_TEST_N_THRESHOLD_SAMPLES=0
+            export OMP_NUM_THREADS=10
             export PACE_LOGLEVEL=Debug
             pytest \
               -v -s --data_path=./test_data/8.1.3/c12_6ranks_standard/dycore \
@@ -110,6 +116,9 @@ jobs:
           run: |
             rm -rf .gt_cache_FV3_A
             export FV3_DACEMODE=BuildAndRun
+            export PACE_FLOAT_PRECISION=64
+            export PACE_TEST_N_THRESHOLD_SAMPLES=0
+            export OMP_NUM_THREADS=10
             export PACE_LOGLEVEL=Debug
             pytest \
               -v -s --data_path=./test_data/8.1.3/c12_6ranks_standard/dycore \
