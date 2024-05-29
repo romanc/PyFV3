@@ -15,7 +15,7 @@ requirements = [
     "xarray",
 ]
 
-test_requirements = ["pytest", "pytest-subtests", "serialbox"]
+test_requirements = ["pytest", "pytest-subtests", "serialbox", "coverage"]
 ndsl_requirements = ["ndsl @ git+https://github.com/NOAA-GFDL/NDSL.git@d2024.04.00"]
 develop_requirements = test_requirements + ndsl_requirements + ["pre-commit"]
 
@@ -27,7 +27,7 @@ extras_requires = {
 
 setup(
     author="The Allen Institute for Artificial Intelligence",
-    author_email="jeremym@allenai.org",
+    author_email="oliver.elbert@noaa.gov",
     python_requires=">=3.8",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
