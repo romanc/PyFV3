@@ -15,7 +15,7 @@ requirements = [
     "xarray",
 ]
 
-test_requirements = ["pytest", "pytest-subtests", "serialbox"]
+test_requirements = ["pytest", "pytest-subtests", "serialbox", "coverage"]
 ndsl_requirements = [
     "ndsl @ git+https://github.com/fmalatino/NDSL.git@fix/computegridoption"
 ]
