@@ -26,7 +26,7 @@ jobs:
         - name: Prepare test_data
           run: |
             mkdir -p test_data  && cd test_data
-            wget https://portal.nccs.nasa.gov/datashare/astg/smt/pace-regression-data/8.1.3_c12_6ranks_standard.tar.gz \
+            wget https://portal.nccs.nasa.gov/datashare/astg/smt/pace-regression-data/8.1.3_c12_6ranks_standard.tar.gz
             tar -xzvf  8.1.3_c12_6ranks_standard.tar.gz --no-same-owner
             cd ..            
        - name: Numpy FvTp2d
@@ -55,10 +55,6 @@ jobs:
               ./tests/savepoint
         - name: Orchestrated dace:cpu Acoustics
           run: |
-            cd test_data
-            wget https://portal.nccs.nasa.gov/datashare/astg/smt/pace-regression-data/8.1.3_c12_6ranks_standard.DynCore.tar.gz
-            tar -xzvf 8.1.3_c12_6ranks_standard.DynCore.tar.gz
-            cd -
             export FV3_DACEMODE=BuildAndRun
             export PACE_FLOAT_PRECISION=64
             export PACE_TEST_N_THRESHOLD_SAMPLES=0
