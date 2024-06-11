@@ -1,6 +1,9 @@
 name: "Translate test (subset)"
 on:
-  [push, pull_request]
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
 
 # cancel running jobs if theres a newer push
 concurrency:
@@ -51,7 +54,7 @@ jobs:
             --which_modules=Remapping \
             --threshold_overrides_file=./tests/savepoint/translate/overrides/standard.yaml \
             ./tests/savepoint
-      - name: Orchestrated dace:cpu Acoustics
+      - name: Orchestrated dace-cpu Acoustics
         run: |
           export FV3_DACEMODE=BuildAndRun
           export PACE_FLOAT_PRECISION=64
