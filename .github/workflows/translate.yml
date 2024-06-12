@@ -31,8 +31,8 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install .[ndsl,test]
       - name: checkout NDSL hash to be tested
-        if: ${{ on.workflow_call.ndsl_hash != 'NONE'}}
-        run: cd NDSL && checkout ${{on.workflow_call.ndsl_hash}} && cd ..
+        if: ${{ workflow_call.ndsl_hash != 'NONE'}}
+        run: cd NDSL && checkout ${{workflow_call.ndsl_hash}} && cd ..
       - name: Prepare test_data
         run: |
           mkdir -p test_data  && cd test_data
