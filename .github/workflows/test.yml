@@ -4,7 +4,7 @@ on:
     inputs:
       ndsl_hash:
         type: string
-        default: "TEST"
+        default: TEST
         required: false
   push:
   pull_request:
