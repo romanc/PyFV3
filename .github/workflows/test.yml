@@ -11,7 +11,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
 env:
-  test_variable : TEST_VARIABLE
+  test_variable : ${{ inputs.ndsl_hash }}
 
 # cancel running jobs if theres a newer push
 concurrency:
@@ -25,6 +25,6 @@ jobs:
       - name: checkout NDSL hash to be tested
         run: |
           echo "test"
-          echo "${{ inputs.ndsl_hash }}"
+          echo "${{ inputs.ndsll_hash }}"
           echo "${{ env.test_variable }}"
 
