@@ -6,7 +6,6 @@ on:
         type: string
         default: 'NONE'
         required: false
-  push:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
