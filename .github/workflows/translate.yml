@@ -3,6 +3,7 @@ on:
   workflow_call:
     inputs:
       ndsl_hash:
+        type: string
         default: 'NONE'
         required: false
   push:
