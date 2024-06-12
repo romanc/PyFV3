@@ -30,10 +30,9 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install .[ndsl,test]
       - name: checkout NDSL hash to be tested
-        if: ${{inputs.ndsl_hash != 'NONE'}}        
+        if: ${{ ! contains(inputs.ndsl_hash, 'NONE') }}        
         run: |
-          echo ${{inputs.ndsl_hash}}
-          #cd NDSL && checkout ${{inputs.ndsl_hash}} && cd ..
+          cd NDSL && checkout ${{inputs.ndsl_hash}} && cd ..
       - name: Prepare test_data
         run: |
           mkdir -p test_data  && cd test_data
