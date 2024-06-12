@@ -23,5 +23,5 @@ jobs:
       - name: checkout NDSL hash to be tested
         run: |
           echo "test"
-          echo ${{inputs.ndsl_hash}}
+          echo "${{inputs.ndsl_hash}}"
 
