@@ -4,7 +4,7 @@ on:
     inputs:
       ndsl_hash:
         type: string
-        default: 'NOHASH'
+        default: ''
         required: false
   push:
   pull_request:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: checkout NDSL hash to be tested
         run: |
-          if [ ${{inputs.ndsl_hash}} != 'NOHASH' ] ; then
+          if [ -n ${{inputs.ndsl_hash}} ] ; then
             echo "test"
           fi
 
