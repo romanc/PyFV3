@@ -5,13 +5,12 @@ on:
       ndsl_hash:
         type: string
         default: TEST
-        required: false
   push:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
 env:
-  test_variable : ${{ inputs.ndsl_hash }}
+  test_variable : TEST_VARIABLE
 
 # cancel running jobs if theres a newer push
 concurrency:
