@@ -32,7 +32,7 @@ jobs:
           pip install .[ndsl,test]
       - name: checkout NDSL hash to be tested
         if: ${{ inputs.ndsl_hash != 'NONE' }}
-        run: cd NDSL && checkout ${{input.ndsl_hash}} && cd ..
+        run: cd NDSL && checkout ${{inputs.ndsl_hash}} && cd ..
       - name: Prepare test_data
         run: |
           mkdir -p test_data  && cd test_data
