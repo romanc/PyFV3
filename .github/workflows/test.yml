@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout NDSL hash to be tested
-        if: ${{ inputs.ndsl_hash != *"None"* }}
+        if: ${{ inputs.ndsl_hash != "None" }}
         run: |
           echo "test"
 
