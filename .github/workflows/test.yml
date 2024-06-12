@@ -4,7 +4,7 @@ on:
     inputs:
       ndsl_hash:
         type: string
-        default: "None"
+        default: 'None'
         required: false
   push:
   pull_request:
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout NDSL hash to be tested
-        if: ${{ ! contains( inputs.ndsl_hash, "None" ) }}
+        if: ${{ ! contains( inputs.ndsl_hash, 'None' ) }}
         run: |
           echo "test"
 
