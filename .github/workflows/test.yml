@@ -15,7 +15,7 @@ env:
 
 # cancel running jobs if theres a newer push
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout NDSL hash to be tested
-        if: ${{ inputs.ndsl_hash != "None" }}
+        if: ${{ ! contains( ${{inputs.ndsl_hash}}, "None" ) }}
         run: |
           echo "test"
 
