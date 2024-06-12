@@ -4,7 +4,8 @@ on:
     inputs:
       ndsl_hash:
         type: string
-        default: TEST
+        default: "TEST"
+        required: false
   push:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
@@ -24,6 +25,7 @@ jobs:
       - name: checkout NDSL hash to be tested
         run: |
           echo "test"
-          echo "${{ inputs.ndsll_hash }}"
+          echo "${{ inputs.ndsl_hash }}"
           echo "${{ env.test_variable }}"
+          echo ${{ inputs.ndsl_hash.default }}
 
