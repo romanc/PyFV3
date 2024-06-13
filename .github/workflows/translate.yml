@@ -30,8 +30,8 @@ jobs:
         if: ${{inputs.trigger}}
         uses: actions/checkout@v4
         with:
+          repository: 'noaa-gfdl/pyFV3'
           submodules: 'recursive'
-          repository: noaa-gfdl/pyFV3
       - name: Checkout repository for not workflow call
         if: ${{ ! inputs.trigger }}
         uses: actions/checkout@v4
