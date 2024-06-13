@@ -24,6 +24,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        repository: noaa-gfdl/pyFV3
         with:
           submodules: 'recursive'
       - name: checkout NDSL hash to be tested
