@@ -6,14 +6,13 @@ on:
         type: string
         default: ''
         required: true
-      trigger:
+      ndsl_trigger:
         type: boolean
         default: false
         required: true
   push:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
-
 
 # cancel running jobs if theres a newer push
 concurrency:
@@ -26,30 +25,36 @@ jobs:
     container:
       image: ghcr.io/noaa-gfdl/miniforge:mpich
     steps:
+
       - name: Checkout repository for workflow_call
-        if: ${{inputs.trigger}}
+        if: ${{inputs.ndsl_trigger}}
         uses: actions/checkout@v4
         with:
           repository: 'noaa-gfdl/pyFV3'
           submodules: 'recursive'
-      - name: Checkout repository for not workflow call
-        if: ${{ ! inputs.trigger }}
+
+      - name: Checkout either pyFV3 (!workflow_call) or NDSL (workflow_call)
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-      - name: checkout NDSL hash to be tested
-        if: ${{inputs.trigger}}
-        run: sed -i "s/NDSL\.git\@[0-9.]*/NDSL\.git\@${{inputs.ndsl_hash}}/" setup.py
-      - name: Install Python packages
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-          pip install .[ndsl,test]
+
+      - name: install packages to test NDSL in pyFV3
+        if: ${{inputs.ndsl_trigger}}
+        run:  |
+          cd NDSL && pip3 install . && cd ..
+          pip3 install .[test]
+
+      - name: Install packages to test only pyFV3
+        if: ${{ ! inputs.ndsl_trigger }}
+        run : pip install .[ndsl,test]
+
       - name: Prepare test_data
         run: |
           mkdir -p test_data  && cd test_data
           wget https://portal.nccs.nasa.gov/datashare/astg/smt/pace-regression-data/8.1.3_c12_6ranks_standard.tar.gz
           tar -xzvf  8.1.3_c12_6ranks_standard.tar.gz --no-same-owner
           cd ..
+
       - name: Numpy FvTp2d
         run: |
           pytest \
@@ -58,6 +63,7 @@ jobs:
             --which_modules=FvTp2d \
             --threshold_overrides_file=./tests/savepoint/translate/overrides/standard.yaml \
             ./tests/savepoint
+
       - name: Numpy D_SW
         run: |
           pytest \
@@ -66,6 +72,7 @@ jobs:
             --which_modules=D_SW \
             --threshold_overrides_file=./tests/savepoint/translate/overrides/standard.yaml \
             ./tests/savepoint
+
       - name: Numpy Remapping
         run: |
           pytest \
