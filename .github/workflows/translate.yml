@@ -25,17 +25,27 @@ jobs:
       image: ghcr.io/noaa-gfdl/miniforge:mpich
     steps:
 
+      - name: Checkout either
+        if: ${{inputs.ndsl_trigger}}
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          repository:  noaa-gfdl/pyFV3
+          path: pyFV3
+
       - name: Checkout either pyFV3 (!workflow_call) or NDSL (workflow_call)
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+          path: my_repo
 
       - name: Checkout pyFV3 if part of NDSL workflow
         if: ${{inputs.ndsl_trigger}}
         run:  |
           cd ${GITHUB_WORKSPACE}
-          git clone --recursive https://github.com/NOAA-GFDL/pyFV3.git && cd pyFV3
-          cp -r ../NDSL .
+          ls
+          mv my_repo pyFV3/NDSL
+          cd pyFV3
 
       - name: install packages to test NDSL in pyFV3
         if: ${{inputs.ndsl_trigger}}
