@@ -6,6 +6,9 @@ on:
         type: string
         default: ''
         required: false
+      trigger:
+        type: boolean
+        default: False
   push:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
@@ -23,17 +26,17 @@ jobs:
       image: ghcr.io/noaa-gfdl/miniforge:mpich
     steps:
       - name: Checkout repository for workflow_call
-        if: ${{github.event_name == 'workflow_call'}}
+        if: ${{inputs.trigger}}
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
           repository: noaa-gfdl/pyFV3
       - name: Checkout repository for not workflow call
-        if: ${{ github.event_name != 'workflow_call' }}
+        if: ${{ ! inputs.trigger }}
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-      - name: checkout NDSL hash to be tested
+     - name: checkout NDSL hash to be tested
         if: ${{github.event_name == 'workflow_call'}}
         run: sed -i "s/NDSL\.git\@2024\.04\.00/${ndsl_hash}/" setup.py
       - name: Install Python packages
