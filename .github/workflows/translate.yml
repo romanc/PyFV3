@@ -39,7 +39,7 @@ jobs:
           submodules: 'recursive'
       - name: checkout NDSL hash to be tested
         if: ${{inputs.trigger}}
-        run: sed -i "s/\@2024\.04\.00/\@${ndsl_hash}/" setup.py
+        run: sed -i "s/\@2024\.04\.00/\@${{inputs.ndsl_hash}}/" setup.py
       - name: Install Python packages
         run: |
           python -m pip install --upgrade pip setuptools wheel
