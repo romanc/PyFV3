@@ -5,10 +5,11 @@ on:
       ndsl_hash:
         type: string
         default: ''
-        required: false
+        required: true
       trigger:
         type: boolean
-        default: False
+        default: false
+        required: true
   push:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
