@@ -37,8 +37,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-     - name: checkout NDSL hash to be tested
-        if: ${{github.event_name == 'workflow_call'}}
+      - name: checkout NDSL hash to be tested
+        if: ${{inputs.trigger}}
         run: sed -i "s/NDSL\.git\@2024\.04\.00/${ndsl_hash}/" setup.py
       - name: Install Python packages
         run: |
