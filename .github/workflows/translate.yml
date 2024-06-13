@@ -1,9 +1,17 @@
 name: "Translate test (subset)"
 on:
-  push:
+  workflow_call:
+    inputs:
+      ndsl_hash:
+        type: string
+        default: ''
+        required: true
+      trigger:
+        type: boolean
+        default: false
+        required: true
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
-
 
 # cancel running jobs if theres a newer push
 concurrency:
@@ -16,10 +24,20 @@ jobs:
     container:
       image: ghcr.io/noaa-gfdl/miniforge:mpich
     steps:
-      - name: Checkout repository
+      - name: Checkout repository for workflow_call
+        if: ${{inputs.trigger}}
+        uses: actions/checkout@v4
+        with:
+          repository: 'noaa-gfdl/pyFV3'
+          submodules: 'recursive'
+      - name: Checkout repository for not workflow call
+        if: ${{ ! inputs.trigger }}
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+      - name: checkout NDSL hash to be tested
+        if: ${{inputs.trigger}}
+        run: sed -i "s/NDSL\.git\@[0-9.]*/NDSL\.git\@${{inputs.ndsl_hash}}/" setup.py
       - name: Install Python packages
         run: |
           python -m pip install --upgrade pip setuptools wheel
