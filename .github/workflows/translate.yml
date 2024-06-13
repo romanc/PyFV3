@@ -41,7 +41,9 @@ jobs:
       - name: install packages to test NDSL in pyFV3
         if: ${{inputs.ndsl_trigger}}
         run:  |
-          pip3 install . && cd .. 
+          echo $PWD
+          pip3 install . && cd ..
+          echo $PWD
           pip3 install .[test]
 
       - name: Install packages to test only pyFV3
