@@ -32,6 +32,7 @@ jobs:
         with:
           repository: 'noaa-gfdl/pyFV3'
           submodules: 'recursive'
+          path:  ./pyFV3_develop
 
       - name: Checkout either pyFV3 (!workflow_call) or NDSL (workflow_call)
         uses: actions/checkout@v4
@@ -41,9 +42,9 @@ jobs:
       - name: install packages to test NDSL in pyFV3
         if: ${{inputs.ndsl_trigger}}
         run:  |
-          echo $PWD
+          echo $PWD && ls
           pip3 install . && cd ..
-          echo $PWD
+          echo $PWD && ls
           pip3 install .[test]
 
       - name: Install packages to test only pyFV3
