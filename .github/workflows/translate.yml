@@ -58,7 +58,7 @@ jobs:
         if: ${{ ! inputs.ndsl_trigger }}
         run : |
           cd ${GITHUB_WORKSPACE} && pwd && ls  -l #pyFV3
-          ls -l ${GITHUB_WORKSPACE}/pyFV3
+          ls -l pyFV3
           pip install .[ndsl,test]
 
       - name: Prepare test_data
