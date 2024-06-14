@@ -1,4 +1,4 @@
-name: "Translate test (subset)"
+name: "Translate pyFV3 test (subset)"
 on:
   workflow_call:
     inputs:
@@ -10,7 +10,6 @@ on:
         type: boolean
         default: false
         required: true
-  push:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
@@ -26,7 +25,7 @@ jobs:
       image: ghcr.io/noaa-gfdl/miniforge:mpich
     steps:
 
-      - name: Checkout either
+      - name: Checkout pyFV3 if NDSL triggers test
         if: ${{inputs.ndsl_trigger}}
         uses: actions/checkout@v4
         with:
@@ -40,7 +39,7 @@ jobs:
           submodules: 'recursive'
           path: ${{github.event.repository.name}}
 
-      - name: Checkout pyFV3 if part of NDSL workflow
+      - name: mv NDSL to pyFV3 if NDSL triggers test
         if: ${{inputs.ndsl_trigger}}
         run:  |
           cd ${GITHUB_WORKSPACE}
@@ -51,7 +50,6 @@ jobs:
         run:  |
           cd ${GITHUB_WORKSPACE}/pyFV3
           cd NDSL && pip3 install . && cd ..
-          echo $PWD && ls
           pip3 install .[test]
 
       - name: Install packages to test only pyFV3
