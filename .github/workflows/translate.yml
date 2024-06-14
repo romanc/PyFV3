@@ -57,7 +57,8 @@ jobs:
       - name: Install packages to test only pyFV3
         if: ${{ ! inputs.ndsl_trigger }}
         run : |
-          cd ${GITHUB_WORKSPACE} && ls  #pyFV3
+          cd ${GITHUB_WORKSPACE} && pwd && ls  #pyFV3
+          cd ${GITHUB_WORKSPACE}/pyFV3
           pip install .[ndsl,test]
 
       - name: Prepare test_data
