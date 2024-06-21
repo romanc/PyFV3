@@ -11,7 +11,7 @@ with open("README.md", encoding="utf-8") as readme_file:
 
 requirements = [
     "f90nml>=1.1.0",
-    "numpy",
+    "numpy==1.26.4",
     "xarray",
 ]
 
