@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  github_repository: ${{github.event.repository.name}}
+  github_repository: $(basename ${{github.repository}})
 
 jobs:
   all_tests:
@@ -47,7 +47,7 @@ jobs:
         if: ${{inputs.ndsl_trigger}}
         run:  |
           cd ${GITHUB_WORKSPACE}
-          mv ${{env.github_repository}} pyFV3/${{env.github_repository}}
+          mv ${{env.github_repository}} pyFV3/.
 
       - name: install packages to test NDSL in pyFV3
         if: ${{inputs.ndsl_trigger}}
@@ -59,7 +59,6 @@ jobs:
       - name: Install packages to test only pyFV3
         if: ${{ ! inputs.ndsl_trigger }}
         run : |
-          mv ${GITHUB_WORKSPACE}/${{env.github_repository}} ${GITHUB_WORKSPACE}/pyFV3
           cd ${GITHUB_WORKSPACE}/pyFV3
           pip install .[ndsl,test]
 
