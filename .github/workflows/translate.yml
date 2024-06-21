@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  github_repository: $(basename ${{github.repository}})
+  github_repository: ${{github.event.repository.name}}
 
 jobs:
   all_tests:
@@ -49,12 +49,16 @@ jobs:
           cd ${GITHUB_WORKSPACE}
           mv ${{env.github_repository}} pyFV3/.
 
+      - name: CI doesn't work without this step
+        if: ${{ !inputs.ndsl_trigger}}
+        run : mv ${GITHUB_WORKSPACE}/${{env.github_repository}} ${GITHUB_WORKSPACE}/pyFV3
+
       - name: install packages to test NDSL in pyFV3
         if: ${{inputs.ndsl_trigger}}
         run:  |
           cd ${GITHUB_WORKSPACE}/pyFV3
-          cd NDSL && pip3 install . && cd ..
-          pip3 install .[test]
+          cd NDSL && pip3 install .[test]
+          cd .. pip3 install .[test]
 
       - name: Install packages to test only pyFV3
         if: ${{ ! inputs.ndsl_trigger }}
