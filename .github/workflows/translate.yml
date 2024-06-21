@@ -26,51 +26,50 @@ jobs:
       image: ghcr.io/noaa-gfdl/miniforge:mpich
     steps:
 
-      - name: Checkout pyFV3 to test NDSL in pyFV3
+      - name: Checkout PyFV3 to test NDSL in PyFV3
         if: ${{inputs.ndsl_trigger}}
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-          repository:  noaa-gfdl/pyFV3
-          path: pyFV3
+          repository:  noaa-gfdl/PyFV3
+          path: PyFV3
 
-      - name: Checkout either pyFV3 (!workflow_call) or NDSL (workflow_call)
+      - name: Checkout either PyFV3 (!workflow_call) or NDSL (workflow_call)
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
           path: ${{github.event.repository.name}}
 
-      - name: Checkout pyFV3 if part of NDSL workflow
+      - name: Checkout PyFV3 if part of NDSL workflow
         if: ${{inputs.ndsl_trigger}}
         run:  |
           cd ${GITHUB_WORKSPACE}
-          mv NDSL pyFV3/NDSL
+          mv NDSL PyFV3/NDSL
 
-      - name: install packages to test NDSL in pyFV3
+      - name: install packages to test NDSL in PyFV3
         if: ${{inputs.ndsl_trigger}}
         run:  |
-          cd ${GITHUB_WORKSPACE}/pyFV3
+          cd ${GITHUB_WORKSPACE}/PyFV3
           cd NDSL && pip3 install . && cd ..
           pip3 install .[test]
 
-      - name: Install packages to test only pyFV3
+      - name: Install packages to test only PyFV3
         if: ${{ ! inputs.ndsl_trigger }}
         run : |
-          mv ${GITHUB_WORKSPACE}/${{github.event.repository.name}} ${GITHUB_WORKSPACE}/pyFV3
-          cd pyFV3
+          cd ${GITHUB_WORKSACE}/PyFV3
           pip install .[ndsl,test]
 
       - name: Prepare test_data
         run: |
-          cd ${GITHUB_WORKSPACE}/pyFV3
+          cd ${GITHUB_WORKSPACE}/PyFV3
           mkdir -p test_data  && cd test_data
           wget https://portal.nccs.nasa.gov/datashare/astg/smt/pace-regression-data/8.1.3_c12_6ranks_standard.tar.gz
           tar -xzvf  8.1.3_c12_6ranks_standard.tar.gz --no-same-owner
           cd ..
 
-      - name: Numpy FvTp2d
+      - name: NumPy FvTp2d
         run: |
-          cd ${GITHUB_WORKSPACE}/pyFV3
+          cd ${GITHUB_WORKSPACE}/PyFV3
           pytest \
             -v -s --data_path=./test_data/8.1.3/c12_6ranks_standard/dycore \
             --backend=numpy \
@@ -80,7 +79,7 @@ jobs:
 
       - name: Numpy D_SW
         run: |
-         cd ${GITHUB_WORKSPACE}/pyFV3
+         cd ${GITHUB_WORKSPACE}/PyFV3
          pytest \
             -v -s --data_path=./test_data/8.1.3/c12_6ranks_standard/dycore \
             --backend=numpy \
@@ -99,7 +98,7 @@ jobs:
             ./tests/savepoint
       - name: Orchestrated dace-cpu Acoustics
         run: |
-          cd ${GITHUB_WORKSPACE}/pyFV3
+          cd ${GITHUB_WORKSPACE}/PyFV3
           export FV3_DACEMODE=BuildAndRun
           export PACE_FLOAT_PRECISION=64
           export PACE_TEST_N_THRESHOLD_SAMPLES=0
