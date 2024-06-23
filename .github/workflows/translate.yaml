@@ -2,10 +2,6 @@ name: "Translate PyFV3 test (subset)"
 on:
   workflow_call:
     inputs:
-      ndsl_hash:
-        type: string
-        default: ''
-        required: true
       ndsl_trigger:
         type: boolean
         default: false
