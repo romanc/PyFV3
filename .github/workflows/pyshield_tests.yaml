@@ -5,6 +5,6 @@ on:
 
 jobs:
   pyshield_translate_tests:
-    uses:  mlee03/PySHiELD/.github/workflows/translate.yaml@reusing_workflows
+    uses:  NOAA-GFDL/PySHiELD/.github/workflows/translate.yaml@develop
     with:
       fv3_trigger:  true
