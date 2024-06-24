@@ -49,7 +49,7 @@ jobs:
         run:  |
           cd ${GITHUB_WORKSPACE}/PyFV3
           cd NDSL && pip3 install .[test]
-          cd .. pip3 install .[test]
+          cd .. && pip3 install .[test]
 
       - name: Install pyFV3 packages ofr !ndsl_trigger
         if: ${{ ! inputs.ndsl_trigger }}
