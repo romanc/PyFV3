@@ -1,16 +1,11 @@
-name: "Translate pyFV3 test (subset)"
+name: "Translate PyFV3 test (subset)"
 on:
   workflow_call:
     inputs:
-      ndsl_hash:
-        type: string
-        default: ''
-        required: true
       ndsl_trigger:
         type: boolean
         default: false
         required: true
-  push:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
@@ -19,6 +14,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  github_repository: ${{github.event.repository.name}}
+
 jobs:
   all_tests:
     runs-on: ubuntu-latest
@@ -26,7 +24,7 @@ jobs:
       image: ghcr.io/noaa-gfdl/miniforge:mpich
     steps:
 
-      - name: Checkout PyFV3 to test NDSL in PyFV3
+      - name: Checkout PyFV3 for external trigger
         if: ${{inputs.ndsl_trigger}}
         uses: actions/checkout@v4
         with:
@@ -34,29 +32,29 @@ jobs:
           repository:  noaa-gfdl/PyFV3
           path: PyFV3
 
-      - name: Checkout either PyFV3 (!workflow_call) or NDSL (workflow_call)
+      - name: Checkout repository that triggers workflow
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
-          path: ${{github.event.repository.name}}
+          path: ${{env.github_repository}}
 
-      - name: Checkout PyFV3 if part of NDSL workflow
+      - name: mv NDSL to PyFV3 if NDSL triggers test
         if: ${{inputs.ndsl_trigger}}
         run:  |
           cd ${GITHUB_WORKSPACE}
-          mv NDSL PyFV3/NDSL
+          mv ${{env.github_repository}} PyFV3/.
 
       - name: install packages to test NDSL in PyFV3
         if: ${{inputs.ndsl_trigger}}
         run:  |
           cd ${GITHUB_WORKSPACE}/PyFV3
-          cd NDSL && pip3 install . && cd ..
-          pip3 install .[test]
+          cd NDSL && pip3 install .[test]
+          cd .. pip3 install .[test]
 
-      - name: Install packages to test only PyFV3
+      - name: Install pyFV3 packages ofr !ndsl_trigger
         if: ${{ ! inputs.ndsl_trigger }}
         run : |
-          cd ${GITHUB_WORKSACE}/PyFV3
+          cd ${GITHUB_WORKSPACE}/PyFV3
           pip install .[ndsl,test]
 
       - name: Prepare test_data
@@ -89,7 +87,7 @@ jobs:
 
       - name: Numpy Remapping
         run: |
-          cd ${GITHUB_WORKSPACE}/pyFV3
+          cd ${GITHUB_WORKSPACE}/PyFV3
           pytest \
             -v -s --data_path=./test_data/8.1.3/c12_6ranks_standard/dycore \
             --backend=numpy \
