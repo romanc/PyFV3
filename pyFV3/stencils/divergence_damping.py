@@ -463,7 +463,6 @@ class DivergenceDamping:
 
         self._fill_corners_dgrid_stencil = high_k_stencil_factory.from_dims_halo(
             func=corners.fill_corners_dgrid_defn,
-            externals={"mysign": -1.0},
             compute_dims=[X_INTERFACE_DIM, Y_INTERFACE_DIM, Z_DIM],
             compute_halos=(self.grid_indexing.n_halo, self.grid_indexing.n_halo),
         )
@@ -663,7 +662,7 @@ class DivergenceDamping:
 
             # TODO(eddied): We pass the same fields 2x to avoid GTC validation errors
             if fillc:
-                self._fill_corners_dgrid_stencil(vc, vc, uc, uc)
+                self._fill_corners_dgrid_stencil(vc, vc, uc, uc, -1.0)
             self._redo_divg_d_stencils[n](uc, vc, divg_d, self._rarea_c)
 
         if self._dddmp < 1e-5:
