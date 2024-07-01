@@ -8,4 +8,5 @@ jobs:
   pyshield_translate_tests:
     uses:  mlee03/PySHiELD/.github/workflows/translate.yaml@reusing_workflows
     with:
-      fv3_trigger:  true
+      component_trigger: true
+      component_name: pyFV3
