@@ -40,3 +40,10 @@ jobs:
         with:
           submodules: 'recursive'
           path: pyFV3/${{inputs.component_name}}
+
+      - name: Checkout pyFV3 for internally triggered
+        if: ${{!inputs.component_trigger}}
+        uses: action/checkout@v4
+        with:
+          submodules: 'recursive'
+          path: pyFV3
