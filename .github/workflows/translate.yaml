@@ -1,15 +1,5 @@
 name: "Translate pyFV3 test (subset)"
 on:
-  workflow_call:
-    inputs:
-      component_trigger:
-        type:  boolean
-        default: false
-        required: false
-      component_name:
-        type: string
-        default: 'None'
-        required: false
   push:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
