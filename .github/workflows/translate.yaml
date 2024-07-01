@@ -25,5 +25,11 @@ jobs:
     container:
       image: ghcr.io/noaa-gfdl/miniforge:mpich
     steps:
-      - name: test
-        run: echo "HELLO"
+
+      - name: Checkout pyFV3 for externally triggered
+        if: ${{inputs.component_trigger}}
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          repository:  noaa-gfdl/pyFV3
+          path: pyFV3
