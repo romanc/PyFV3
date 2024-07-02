@@ -8,7 +8,7 @@ on:
         required: false
       component_name:
         type: string
-        default: 'None'
+        default: ''
         required: false
   push:
   pull_request:
@@ -26,7 +26,7 @@ jobs:
       image: ghcr.io/noaa-gfdl/miniforge:mpich
     steps:
 
-      - name: Checkout pyFV3 for externally triggered
+      - name: External trigger Checkout pyFV3
         if: ${{inputs.component_trigger}}
         uses: actions/checkout@v4
         with:
@@ -34,28 +34,20 @@ jobs:
           repository:  noaa-gfdl/pyFV3
           path: pyFV3
 
-      - name: Checkout NDSL for externally triggered
-        if: ${{inputs.component_trigger}}
+      - name: Checkout hash that triggered CI
         uses: actions/checkout@v4
         with:
           submodules: 'recursive'
           path: pyFV3/${{inputs.component_name}}
 
-      - name: Checkout pyFV3 for interally triggered
-        if: ${{ ! inputs.component_trigger }}
-        uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
-          path: pyFV3
-
-      - name: install packages to test NDSL in pyFV3
+      - name: External trigger install NDSL packages
         if: ${{inputs.component_trigger}}
         run:  |
           cd ${GITHUB_WORKSPACE}/pyFV3
-          cd NDSL && pip3 install .[test]
-          cd .. pip3 install .[test]
+          cd NDSL && pip3 install .[test] && cd ../
+          pip3 install .[test]
 
-      - name: Install packages to test only pyFV3
+      - name: Install pyFV3 packages
         if: ${{ ! inputs.component_trigger }}
         run : |
           cd ${GITHUB_WORKSPACE}/pyFV3

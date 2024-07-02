@@ -1,4 +1,4 @@
-name: "pySHiELD Translate tests"
+name: "pySHiELD translate tests"
 on:
   push:
   pull_request:
