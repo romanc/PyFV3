@@ -1,4 +1,4 @@
-name: "Translate pyFV3 test (subset)"
+name: "pyFV3 translate tests (subset)"
 on:
   workflow_call:
     inputs:
@@ -10,9 +10,7 @@ on:
         type: string
         default: ''
         required: false
-  push:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
 # cancel running jobs if theres a newer push
 concurrency:
@@ -61,7 +59,7 @@ jobs:
           tar -xzvf  8.1.3_c12_6ranks_standard.tar.gz --no-same-owner
           cd ..
 
-      - name: Numpy FvTp2d
+      - name: NumPy FvTp2d
         run: |
           cd ${GITHUB_WORKSPACE}/pyFV3
           pytest \
