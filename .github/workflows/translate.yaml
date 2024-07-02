@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       component_trigger:
-        type:  boolean
+        type: boolean
         default: false
         required: false
       component_name:
