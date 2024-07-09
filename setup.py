@@ -28,7 +28,7 @@ extras_requires = {
 setup(
     author="The Allen Institute for Artificial Intelligence",
     author_email="oliver.elbert@noaa.gov",
-    python_requires=">=3.8",
+    python_requires=">=3.11",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
