@@ -611,12 +611,14 @@ class DelnFluxNoSG:
             externals={**corner_axis_offsets},
             origin=corner_origin,
             domain=corner_domain,
+            skip_passes=("UnreachableStmtPruning",),
         )
         self._copy_corners_y_nord = stencil_factory.from_origin_domain(
             copy_corners_y_nord,
             externals={**corner_axis_offsets},
             origin=corner_origin,
             domain=corner_domain,
+            skip_passes=("UnreachableStmtPruning",),
         )
 
     def __call__(self, q, fx2, fy2, damp_c, d2, mass=None):
