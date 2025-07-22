@@ -31,16 +31,22 @@ test = [
     "pytest-subtests",
     "serialbox",
 ]
+docs = [
+    "mkdocs-material",
+    "mkdocstrings[python]",
+]
 ndsl = ["ndsl @ git+https://github.com/NOAA-GFDL/NDSL.git@develop"]
 develop = [
     "pyfv3[test]",
     "pyfv3[ndsl]",
+    "pyfv3[docs]",
     "pre-commit",
 ]
 extras = [
     "pyfv3[test]",
     "pyfv3[ndsl]",
     "pyfv3[develop]",
+    "pyfv3[docs]",
 ]
 
 [project.urls]
