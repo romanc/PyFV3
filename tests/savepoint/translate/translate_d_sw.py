@@ -17,13 +17,12 @@ class TranslateD_SW(TranslateDycoreFortranData2Py):
     ):
         super().__init__(grid, namelist, stencil_factory)
         self.max_error = 3.2e-10
-        self.stencil_factory = stencil_factory
         column_namelist = d_sw.get_column_namelist(
             config=self.config.acoustic_dynamics.d_grid_shallow_water,
             quantity_factory=self.grid.quantity_factory,
         )
         self.compute_func = d_sw.DGridShallowWaterLagrangianDynamics(
-            stencil_factory=self.stencil_factory,
+            stencil_factory=stencil_factory,
             quantity_factory=self.grid.quantity_factory,
             grid_data=self.grid.grid_data,
             damping_coefficients=self.grid.damping_coefficients,

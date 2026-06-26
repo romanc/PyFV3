@@ -1,6 +1,14 @@
+import copy
 from collections.abc import Mapping
 
-from ndsl import NDSLRuntime, Quantity, QuantityFactory, StencilFactory
+from ndsl import (
+    Backend,
+    NDSLRuntime,
+    OptimizationConfig,
+    Quantity,
+    QuantityFactory,
+    StencilFactory,
+)
 from ndsl.constants import I_DIM, I_INTERFACE_DIM, J_DIM, J_INTERFACE_DIM, K_DIM
 from ndsl.dsl.gt4py import PARALLEL, I, J, computation
 from ndsl.dsl.gt4py import function as gtfunction
@@ -785,8 +793,9 @@ class DGridShallowWaterLagrangianDynamics(NDSLRuntime):
         nested: bool,
         stretched_grid: bool,
         config: DGridShallowWaterLagrangianDynamicsConfig,
+        optimization_config: OptimizationConfig | None = None,
     ):
-        super().__init__(stencil_factory)
+        super().__init__(stencil_factory, optimization_config)
 
         self.grid_data = grid_data
         self._f0 = self.grid_data.fC_agrid
@@ -865,6 +874,27 @@ class DGridShallowWaterLagrangianDynamics(NDSLRuntime):
         self._tmp_fy2 = self.make_local(quantity_factory, [I_DIM, J_DIM, K_DIM])
         self._column_namelist = column_namelist
 
+        # FvTp2d special treatment
+        # Here be dragons ... many 🐉 🐉 🐉
+        sf_fvtp2d = stencil_factory
+        qf_fvtp2d = quantity_factory
+        local_config = None
+        if stencil_factory.backend == Backend("orch:dace:cpu:IJK"):
+            new_backend = Backend("orch:dace:cpu:KJI")
+            sf_fvtp2d = copy.deepcopy(stencil_factory)
+            sf_fvtp2d.config.compilation_config.backend = new_backend
+            sf_fvtp2d.config.dace_config.backend = new_backend
+            qf_fvtp2d = copy.deepcopy(quantity_factory)
+            qf_fvtp2d.backend = new_backend
+            local_config = OptimizationConfig(
+                stree=OptimizationConfig.Tree(
+                    enabled=True,
+                    merger=OptimizationConfig.Tree.Merger(
+                        enabled=True, overcompute=True, order="KJI"
+                    ),
+                )
+            )
+
         self.delnflux_nosg_w = DelnFluxNoSG(
             stencil_factory,
             damping_coefficients,
@@ -878,42 +908,46 @@ class DGridShallowWaterLagrangianDynamics(NDSLRuntime):
             self._column_namelist["nord_v"],
         )
         self.fvtp2d_dp = FiniteVolumeTransport(
-            stencil_factory=stencil_factory,
-            quantity_factory=quantity_factory,
+            stencil_factory=sf_fvtp2d,
+            quantity_factory=qf_fvtp2d,
             grid_data=grid_data,
             damping_coefficients=damping_coefficients,
             grid_type=config.grid_type,
             hord=config.hord_dp,
             nord=self._column_namelist["nord_v"],
             damp_c=self._column_namelist["damp_vt"],
+            optimization_config=local_config,
         )
         self.fvtp2d_dp_t = FiniteVolumeTransport(
-            stencil_factory=stencil_factory,
-            quantity_factory=quantity_factory,
+            stencil_factory=sf_fvtp2d,
+            quantity_factory=qf_fvtp2d,
             grid_data=grid_data,
             damping_coefficients=damping_coefficients,
             grid_type=config.grid_type,
             hord=config.hord_dp,
             nord=self._column_namelist["nord_t"],
             damp_c=self._column_namelist["damp_t"],
+            optimization_config=local_config,
         )
         self.fvtp2d_tm = FiniteVolumeTransport(
-            stencil_factory=stencil_factory,
-            quantity_factory=quantity_factory,
+            stencil_factory=sf_fvtp2d,
+            quantity_factory=qf_fvtp2d,
             grid_data=grid_data,
             damping_coefficients=damping_coefficients,
             grid_type=config.grid_type,
             hord=config.hord_tm,
             nord=self._column_namelist["nord_v"],
             damp_c=self._column_namelist["damp_vt"],
+            optimization_config=local_config,
         )
         self.fvtp2d_vt_nodelnflux = FiniteVolumeTransport(
-            stencil_factory=stencil_factory,
-            quantity_factory=quantity_factory,
+            stencil_factory=sf_fvtp2d,
+            quantity_factory=qf_fvtp2d,
             grid_data=grid_data,
             damping_coefficients=damping_coefficients,
             grid_type=config.grid_type,
             hord=config.hord_vt,
+            optimization_config=local_config,
         )
         self.fv_prep = FiniteVolumeFluxPrep(
             stencil_factory=stencil_factory,

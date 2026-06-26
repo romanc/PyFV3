@@ -1,4 +1,4 @@
-from ndsl import NDSLRuntime, QuantityFactory, StencilFactory
+from ndsl import NDSLRuntime, OptimizationConfig, QuantityFactory, StencilFactory
 from ndsl.constants import I_DIM, J_DIM, K_DIM
 from ndsl.dsl.gt4py import PARALLEL, computation
 from ndsl.dsl.gt4py import function as gtfunction
@@ -132,8 +132,9 @@ class FiniteVolumeTransport(NDSLRuntime):
         hord,
         nord=None,
         damp_c=None,
+        optimization_config: OptimizationConfig | None = None,
     ):
-        super().__init__(stencil_factory)
+        super().__init__(stencil_factory, optimization_config)
 
         # use a shorter alias for grid_indexing here to avoid very verbose lines
         idx = stencil_factory.grid_indexing
