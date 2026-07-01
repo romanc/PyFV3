@@ -892,6 +892,7 @@ class DGridShallowWaterLagrangianDynamics(NDSLRuntime):
                     merger=OptimizationConfig.Tree.Merger(
                         enabled=True, overcompute=True, order="KJI"
                     ),
+                    refine_transients=False,
                 )
             )
 
