@@ -11,7 +11,7 @@ from ndsl.dsl.stencil import get_stencils_with_varied_bounds
 from ndsl.dsl.typing import Float, FloatField, FloatFieldIJ, FloatFieldK
 from ndsl.grid import DampingCoefficients, GridData
 from ndsl.stencils import copy, corners, set_value
-from pyfv3.stencils.a2b_ord4 import AGrid2BGridFourthOrder, doubly_periodic_a2b_ord4
+from pyfv3.stencils.a2b_ord4 import AGrid2BGridFourthOrderInPlace
 from pyfv3.stencils.d2a2c_vect import contravariant
 
 
@@ -266,59 +266,148 @@ def redo_divg_d(
             divg_d = divg_d + uc
 
 
-def smagorinsky_diffusion_approx(delpc: FloatField, vort: FloatField, absdt: Float):
-    """
-    Args:
-        delpc (in): divergence on cell corners
-        vort (inout): local eddy diffusivity
-        absdt (in): abs(dt)
-    """
-    with computation(PARALLEL), interval(...):
-        vort = absdt * sqrt(delpc**2 + vort**2)
-
-
-def smag_corner(
+def smag_shear_a_grid(
     u: FloatField,
     v: FloatField,
     dx: FloatFieldIJ,
-    dxc: FloatFieldIJ,
     dy: FloatFieldIJ,
-    dyc: FloatFieldIJ,
     rarea: FloatFieldIJ,
-    rarea_c: FloatFieldIJ,
-    smag_c: FloatField,
-    dt: Float,
+    shear: FloatField,
 ):
     """
-    Smagorinsky diffusion for a doubly-periodic domain
+    First part of Smagorinsky diffusion computing shear strain on A grid.
+
     Args:
         u (in): d-grid u wind
         v (in): d-grid v wind
         dx (in): Distance between grid corners along the x-direction
-        dxc (in): Distance between grid centers along the x-direction
         dy (in): Distance between grid corners along the y-direction
-        dyc (in): Distance between grid centers along the y-direction
         rarea (in): 1/cell area
-        rarea_c (in): 1/ c-grid cell area
-        smag_c (out): tension shear strain on cell corners
-        dt (in): timestep
+        wk (out): shear strain on A-grid
     """
 
     with computation(PARALLEL), interval(...):
-        # compute tension strain at corners:
-        shear = 0.0
+        vt = u * dx
+        ut = v * dy
+        shear = rarea * (vt - vt[0, 1, 0] + ut - ut[1, 0, 0])
 
+
+def smag_middle(
+    u: FloatField,
+    v: FloatField,
+    dxc: FloatFieldIJ,
+    dyc: FloatFieldIJ,
+    ut: FloatField,
+    vt: FloatField,
+) -> None:
+    """
+    Compute ut/vt which are later read with offset in horizontal region.
+
+    Args:
+        u (in): d-grid u wind
+        v (in): d-grid v wind
+        dxc (in): Distance between grid centers along the x-direction
+        dyc (in): Distance between grid centers along the y-direction
+    """
+    with computation(PARALLEL), interval(...):
         ut = u * dyc
         vt = v * dxc
+
+
+def smag_tension(
+    ut: FloatField,
+    vt: FloatField,
+    rarea_c: FloatFieldIJ,
+    dt: Float,
+    shear: FloatField,
+    smag_c: FloatField,
+) -> None:
+    """
+    Second part of Smagorinsky diffusion computing tension strain at corners.
+
+    Args:
+        ut (in): ...
+        vt (in): ...
+        rarea_c (in): 1/ c-grid cell area
+        dt (in): timestep
+        shear (in): shear strain on B-grid
+        smag_c (out): tension shear strain on cell corners
+    """
+    from __externals__ import i_end, i_start, j_end, j_start
+
+    with computation(PARALLEL), interval(...):
         smag_c_t = rarea_c * (vt[0, -1, 0] - vt - ut[-1, 0, 0] + ut)
 
-        # compute shear strain:
-        vt2 = u * dx
-        ut2 = v * dy
-        wk = rarea * (vt2 - vt2[0, 1, 0] + ut2 - ut2[1, 0, 0])
+        # Remove the extra term at the corners
+        with horizontal(region[i_start, j_start], region[i_end + 1, j_start]):
+            # sw & se corners
+            smag_c_t = smag_c_t - vt[0, -1, 0]
+        with horizontal(region[i_start, j_end + 1], region[i_end + 1, j_end + 1]):
+            # nw & ne corners
+            smag_c_t = smag_c_t + vt
 
-        shear = doubly_periodic_a2b_ord4(wk)
+    with computation(PARALLEL), interval(...):
         smag_c = dt * sqrt(shear**2 + smag_c_t**2)
+
+
+class SmagorinskyDiffusion(NDSLRuntime):
+    """Smagorinsky diffusion"""
+
+    def __init__(
+        self,
+        stencil_factory: StencilFactory,
+        quantity_factory: QuantityFactory,
+        grid_data: GridData,
+        grid_type: int,
+    ) -> None:
+        super().__init__(stencil_factory)
+
+        self._smag_shear_a_grid = stencil_factory.from_dims_halo(
+            func=smag_shear_a_grid,
+            compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
+            compute_halos=(0, 0),
+        )
+        self._a2b_ord4 = AGrid2BGridFourthOrderInPlace(
+            stencil_factory, quantity_factory, grid_data, grid_type
+        )
+        self._smag_middle = stencil_factory.from_dims_halo(
+            func=smag_middle,
+            compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
+            compute_halos=(0, 0),
+        )
+        self._smag_tension = stencil_factory.from_dims_halo(
+            func=smag_tension,
+            compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
+            compute_halos=(0, 0),
+        )
+
+        self._shear = self.make_local(
+            quantity_factory, dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM]
+        )
+        self._ut = self.make_local(
+            quantity_factory, dims=[I_INTERFACE_DIM, J_DIM, K_DIM]
+        )
+        self._vt = self.make_local(
+            quantity_factory, dims=[I_DIM, J_INTERFACE_DIM, K_DIM]
+        )
+
+    def __call__(
+        self,
+        u: FloatField,
+        v: FloatField,
+        dx: FloatFieldIJ,
+        dxc: FloatFieldIJ,
+        dy: FloatFieldIJ,
+        dyc: FloatFieldIJ,
+        rarea: FloatFieldIJ,
+        rarea_c: FloatFieldIJ,
+        dt: Float,
+        smag_c: FloatField,
+    ) -> None:
+        self._smag_shear_a_grid(u, v, dx, dy, rarea, self._shear)
+        self._a2b_ord4(self._shear)
+        self._smag_middle(u, v, dxc, dyc, self._ut, self._vt)
+        self._smag_tension(self._ut, self._vt, rarea_c, dt, self._shear, smag_c)
 
 
 class DivergenceDamping(NDSLRuntime):
@@ -337,7 +426,7 @@ class DivergenceDamping(NDSLRuntime):
         dddmp: Float,
         d4_bg,
         nord: int,
-        grid_type,
+        grid_type: int,
         nord_col: Quantity,
         d2_bg: FloatFieldK,
     ):
@@ -503,30 +592,9 @@ class DivergenceDamping(NDSLRuntime):
             compute_halos=(self.grid_indexing.n_halo, self.grid_indexing.n_halo),
         )
 
-        if self._grid_type < 3:
-            self.a2b_ord4 = AGrid2BGridFourthOrder(
-                stencil_factory=high_k_stencil_factory,
-                quantity_factory=quantity_factory,
-                grid_data=grid_data,
-                grid_type=self._grid_type,
-            )
-
-            self._smagorinksy_diffusion_approx_stencil = (
-                high_k_stencil_factory.from_dims_halo(
-                    func=smagorinsky_diffusion_approx,
-                    compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
-                    compute_halos=(0, 0),
-                )
-            )
-        else:
-            self._smag_corner = high_k_stencil_factory.from_dims_halo(
-                func=smag_corner,
-                externals={
-                    "replace": False,
-                },
-                compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
-                compute_halos=(0, 0),
-            )
+        self._smagorinsky_diffusion = SmagorinskyDiffusion(
+            high_k_stencil_factory, quantity_factory, grid_data, grid_type
+        )
 
         self._damping_nord_highorder_stencil = high_k_stencil_factory.from_dims_halo(
             func=damping_nord_highorder_stencil,
@@ -694,27 +762,18 @@ class DivergenceDamping(NDSLRuntime):
             # TODO: what is wk/v_contra_dxc here?
             # take the cell centered relative vorticity and regrid it to cell corners
             # for smagorinsky diffusion
-            #
-            if self._grid_type < 3:
-                self.a2b_ord4(rel_vort_agrid, damped_rel_vort_bgrid)
-                self._smagorinksy_diffusion_approx_stencil(
-                    delpc,
-                    damped_rel_vort_bgrid,
-                    abs(dt),
-                )
-            else:
-                self._smag_corner(
-                    u,
-                    v,
-                    self._dx,
-                    self._dxc,
-                    self._dy,
-                    self._dyc,
-                    self._rarea,
-                    self._rarea_c,
-                    damped_rel_vort_bgrid,
-                    abs(dt),
-                )
+            self._smagorinsky_diffusion(
+                u,
+                v,
+                self._dx,
+                self._dxc,
+                self._dy,
+                self._dyc,
+                self._rarea,
+                self._rarea_c,
+                abs(dt),
+                damped_rel_vort_bgrid,
+            )
 
         # reference https://github.com/NOAA-GFDL/GFDL_atmos_cubed_sphere/blob/main/model/sw_core.F90#L1422 # noqa: E501
         dd8 = self._damping_coefficients.da_min * np.power(
