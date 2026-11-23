@@ -266,6 +266,61 @@ def redo_divg_d(
             divg_d = divg_d + uc
 
 
+def smag_ut(u: FloatField, dyc: FloatFieldIJ, ut: FloatField) -> None:
+    """
+    ...
+
+    Args:
+        u (in): d-grid u wind
+        dyc (in): Distance between grid centers along the y-direction
+        ut (out): ...
+    """
+    with computation(PARALLEL), interval(...):
+        ut = u * dyc
+
+
+def smag_vt(v: FloatField, dxc: FloatFieldIJ, vt: FloatField) -> None:
+    """
+    ...
+
+    Args:
+        v (in): d-grid v wind
+        dxc (in): Distance between grid centers along the x-direction
+        vt (out): ...
+    """
+    with computation(PARALLEL), interval(...):
+        vt = v + dxc
+
+
+def smag_tension(
+    ut: FloatField,
+    vt: FloatField,
+    rarea_c: FloatFieldIJ,
+    smag_c: FloatField,
+) -> None:
+    """
+    Compute tension strain and remove extra term at the corners.
+
+    Args:
+        ut (in): ...
+        vt (in): ....
+        rarea_c (in): 1/ c-grid cell area
+        smag_c (out): smagorinsky diffusion
+    """
+    with computation(PARALLEL), interval(...):
+        from __externals__ import i_end, i_start, j_end, j_start
+
+        smag_c = rarea_c * (vt[0, -1, 0] - vt - ut[-1, 0, 0] + ut)
+
+        # Remove the extra term at the corners
+        with horizontal(region[i_start, j_start], region[i_end, j_start]):
+            # sw & se corners
+            smag_c = smag_c - vt[0, -1, 0]
+        with horizontal(region[i_start, j_end], region[i_end, j_end]):
+            # nw & ne corners
+            smag_c = smag_c + vt
+
+
 def smag_shear_a_grid(
     u: FloatField,
     v: FloatField,
@@ -283,7 +338,7 @@ def smag_shear_a_grid(
         dx (in): Distance between grid corners along the x-direction
         dy (in): Distance between grid corners along the y-direction
         rarea (in): 1/cell area
-        wk (out): shear strain on A-grid
+        shear (out): shear strain on A-grid
     """
 
     with computation(PARALLEL), interval(...):
@@ -292,62 +347,13 @@ def smag_shear_a_grid(
         shear = rarea * (vt - vt[0, 1, 0] + ut - ut[1, 0, 0])
 
 
-def smag_middle(
-    u: FloatField,
-    v: FloatField,
-    dxc: FloatFieldIJ,
-    dyc: FloatFieldIJ,
-    ut: FloatField,
-    vt: FloatField,
-) -> None:
-    """
-    Compute ut/vt which are later read with offset in horizontal region.
-
-    Args:
-        u (in): d-grid u wind
-        v (in): d-grid v wind
-        dxc (in): Distance between grid centers along the x-direction
-        dyc (in): Distance between grid centers along the y-direction
-    """
-    with computation(PARALLEL), interval(...):
-        ut = u * dyc
-        vt = v * dxc
-
-
-def smag_tension(
-    ut: FloatField,
-    vt: FloatField,
-    rarea_c: FloatFieldIJ,
-    dt: Float,
+def smag_final_computation(
     shear: FloatField,
+    dt: Float,
     smag_c: FloatField,
 ) -> None:
-    """
-    Second part of Smagorinsky diffusion computing tension strain at corners.
-
-    Args:
-        ut (in): ...
-        vt (in): ...
-        rarea_c (in): 1/ c-grid cell area
-        dt (in): timestep
-        shear (in): shear strain on B-grid
-        smag_c (out): tension shear strain on cell corners
-    """
-    from __externals__ import i_end, i_start, j_end, j_start
-
     with computation(PARALLEL), interval(...):
-        smag_c_t = rarea_c * (vt[0, -1, 0] - vt - ut[-1, 0, 0] + ut)
-
-        # Remove the extra term at the corners
-        with horizontal(region[i_start, j_start], region[i_end + 1, j_start]):
-            # sw & se corners
-            smag_c_t = smag_c_t - vt[0, -1, 0]
-        with horizontal(region[i_start, j_end + 1], region[i_end + 1, j_end + 1]):
-            # nw & ne corners
-            smag_c_t = smag_c_t + vt
-
-    with computation(PARALLEL), interval(...):
-        smag_c = dt * sqrt(shear**2 + smag_c_t**2)
+        smag_c = dt * sqrt(shear**2 + smag_c**2)
 
 
 class SmagorinskyDiffusion(NDSLRuntime):
@@ -362,6 +368,28 @@ class SmagorinskyDiffusion(NDSLRuntime):
     ) -> None:
         super().__init__(stencil_factory)
 
+        self._smag_ut = stencil_factory.from_dims_halo(
+            func=smag_ut,
+            compute_dims=[I_INTERFACE_DIM, J_DIM, K_DIM],
+            compute_halos=(0, 1),
+        )
+
+        self._smag_vt = stencil_factory.from_dims_halo(
+            func=smag_vt,
+            compute_dims=[I_DIM, J_INTERFACE_DIM, K_DIM],
+            compute_halos=(1, 0),
+        )
+
+        self._smag_tension = stencil_factory.from_dims_halo(
+            func=smag_tension,
+            compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
+            compute_halos=(0, 0),
+        )
+
+        self._smag_ut2 = stencil_factory.from_dims_halo(
+            func=smag_vt, compute_dims=[I_DIM, J_INTERFACE_DIM, K_DIM]
+        )
+
         self._smag_shear_a_grid = stencil_factory.from_dims_halo(
             func=smag_shear_a_grid,
             compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
@@ -370,16 +398,16 @@ class SmagorinskyDiffusion(NDSLRuntime):
         self._a2b_ord4 = AGrid2BGridFourthOrderInPlace(
             stencil_factory, quantity_factory, grid_data, grid_type
         )
-        self._smag_middle = stencil_factory.from_dims_halo(
-            func=smag_middle,
-            compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
-            compute_halos=(0, 0),
-        )
-        self._smag_tension = stencil_factory.from_dims_halo(
-            func=smag_tension,
-            compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
-            compute_halos=(0, 0),
-        )
+        # self._smag_middle = stencil_factory.from_dims_halo(
+        #     func=smag_middle,
+        #     compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
+        #     compute_halos=(0, 0),
+        # )
+        # self._smag_tension = stencil_factory.from_dims_halo(
+        #     func=smag_tension,
+        #     compute_dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM],
+        #     compute_halos=(0, 0),
+        # )
 
         self._shear = self.make_local(
             quantity_factory, dims=[I_INTERFACE_DIM, J_INTERFACE_DIM, K_DIM]
